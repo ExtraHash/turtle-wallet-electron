@@ -13,7 +13,7 @@ import { WalletShellApi, WalletShellSettings } from './ws_api';
 import  { UpdateUiState } from './wsui_updater';
 import { Utils } from './ws_utils';
 import { syncStatus } from './ws_constants';
-
+import { WalletBackend, ConventionalDaemon, BlockchainCacheApi } from 'turtlecoin-wallet-backend';
 
 const wsutil = new Utils();
 const settings = new Store({ name: 'Settings' });
@@ -573,31 +573,15 @@ export class WalletShellManager {
     };
 
     public createWallet(walletFile, password) {
-        this.init();
-        let wsm = this;
         return new Promise((resolve, reject) => {
-            let serviceArgs = wsm.serviceArgsDefault.concat(
-                [
-                    '-g', '-w', walletFile, '-p', password,
-                    '--log-level', 0, '--log-file', path.join(remote.app.getPath('temp'), 'ts.log')
-                ]
-            );
-            childProcess.execFile(
-                wsm.serviceBin, serviceArgs, (error, stdout, stderr) => {
-                    if (stdout) log.debug(stdout);
-                    if (stderr) log.debug(stderr);
-                    if (error) {
-                        log.error(`Failed to create wallet: ${error.message}`);
-                        return reject(new Error(ERROR_WALLET_CREATE));
-                    } else {
-                        if (!wsutil.isRegularFileAndWritable(walletFile)) {
-                            log.error(`${walletFile} is invalid or unreadable`);
-                            return reject(new Error(ERROR_WALLET_CREATE));
-                        }
-                        return resolve(walletFile);
-                    }
-                }
-            );
+            const daemon: BlockchainCacheApi = new BlockchainCacheApi('blockapi.turtlepay.io', true);
+            const wallet: WalletBackend = WalletBackend.createWallet(daemon);
+            const saved = wallet.saveWalletToFile(walletFile, password);
+            if (!saved) {
+                log.error('ERROR_WALLET_CREATE')
+                return reject(new Error(ERROR_WALLET_CREATE));
+            }
+            return resolve(walletFile);
         });
     };
 

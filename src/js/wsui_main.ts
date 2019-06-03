@@ -1770,12 +1770,6 @@ function handleWalletCreate() {
 
         // validate path
         wsutil.validateWalletPath(filePathValue, DEFAULT_WALLET_PATH).then((finalPath: any) => {
-
-            // validate password
-            if (!passwordValue.length) {
-                formMessageSet('create', 'error', `Please enter a password, creating wallet without a password will not be supported!`);
-                return;
-            }
             settings.set('recentWalletDir', path.dirname(finalPath));
 
             // user already confirm to overwrite

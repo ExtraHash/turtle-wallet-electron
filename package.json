@@ -38,7 +38,8 @@
     "node-crypto-gcm": "^1.0.3",
     "qr-image": "^3.2.0",
     "request": "^2.88.0",
-    "request-promise-native": "^1.0.7"
+    "request-promise-native": "^1.0.7",
+    "turtlecoin-wallet-backend": "^2.0.0"
   },
   "build": {
     "appId": "lol.turtlecoin.walletshell",
