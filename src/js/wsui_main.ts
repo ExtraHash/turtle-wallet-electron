@@ -1603,10 +1603,10 @@ function handleWalletOpen() {
             formMessageSet('load', 'warning', "Accessing wallet...<br><progress></progress>");
             wsmanager.stopService().then(() => {
 
-                formMessageSet('load', 'warning', "Starting wallet service...<br><progress></progress>");
+                formMessageSet('load', 'warning', "Starting wallet...<br><progress></progress>");
                 setTimeout(() => {
                     formMessageSet('load', 'warning', "Opening wallet, please be patient...<br><progress></progress>");
-                    wsmanager.startService(walletFile, walletPass, onError, onSuccess, onDelay);
+                    wsmanager.startWallet(walletFile, walletPass, onError, onSuccess, onDelay);
                 }, 800);
             }).catch((err) => {
                 console.log(err);
