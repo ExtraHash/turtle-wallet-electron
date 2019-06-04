@@ -210,9 +210,8 @@ export class WalletShellManager {
         try { fs.unlinkSync(wsession.get('walletConfig')); } catch (e) { }
     };
     
-    public startWallet(walletFile, password, onError, onSuccess, onDelay) {
+    public startWallet(walletFile, password, onError, onSuccess) {
         if (this.syncWorker) this.stopSyncWorker();
-        let wsm = this;
         let daemon = new BlockchainCacheApi('blockapi.turtlepay.io', true);
         const [wallet, error] = WalletBackend.openWalletFromFile(daemon, walletFile, password);
         if (error) {
@@ -222,7 +221,7 @@ export class WalletShellManager {
             let walletAddress = wallet.getPrimaryAddress();
             log.debug('walletAddress = ' + walletAddress)
             wsession.set('loadedWalletAddress', walletAddress);
-            onSuccess(walletFile);
+            onSuccess();
         }
     }
 

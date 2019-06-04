@@ -425,24 +425,6 @@ function changeSection(sectionId: any, targetRedir?: any) {
         return;
     }
 
-    if (needServiceReady.includes(targetSection) && !isServiceReady) {
-        // no access to wallet, send, tx when no wallet opened
-        finalTarget = 'section-welcome';
-        let notoast = finalTarget.concat(['section-overview']);
-        if (!notoast.includes(origTarget)) {
-            toastMsg = "Please create/open your wallet!";
-        }
-    } else if (needSynced.includes(targetSection) && !isSynced) {
-        // need synced, return early
-        wsutil.showToast("Please wait until the syncing completes!");
-        return;
-    } else if (needServiceStopped.includes(targetSection) && isServiceReady) {
-        finalTarget = 'section-overview';
-    } else {
-        finalTarget = targetSection;
-        toastMsg = '';
-    }
-
     let section = document.getElementById(finalTarget);
     if (section.classList.contains('is-shown')) {
         if (toastMsg.length && !targetRedir) wsutil.showToast(toastMsg);
@@ -1571,18 +1553,12 @@ function handleWalletOpen() {
         function onSuccess() {
             walletOpenInputPath.value = settings.get('recentWallet');
             overviewWalletAddress.value = wsession.get('loadedWalletAddress');
-
             wsmanager.getNodeFee();
             WALLET_OPEN_IN_PROGRESS = false;
             changeSection('section-overview');
-
             setTimeout(() => {
                 setOpenButtonsState(0);
             }, 300);
-        }
-
-        function onDelay(msg) {
-            formMessageSet('load', 'warning', `${msg}<br><progress></progress>`);
         }
 
         let walletFile = walletOpenInputPath.value;
@@ -1601,20 +1577,11 @@ function handleWalletOpen() {
             settings.set('recentWallet', walletFile);
             settings.set('recentWalletDir', path.dirname(walletFile));
             formMessageSet('load', 'warning', "Accessing wallet...<br><progress></progress>");
-            wsmanager.stopService().then(() => {
-
-                formMessageSet('load', 'warning', "Starting wallet...<br><progress></progress>");
-                setTimeout(() => {
-                    formMessageSet('load', 'warning', "Opening wallet, please be patient...<br><progress></progress>");
-                    wsmanager.startWallet(walletFile, walletPass, onError, onSuccess, onDelay);
-                }, 800);
-            }).catch((err) => {
-                console.log(err);
-                formMessageSet('load', 'error', "Unable to start service");
-                WALLET_OPEN_IN_PROGRESS = false;
-                setOpenButtonsState(0);
-                return false;
-            });
+            formMessageSet('load', 'warning', "Starting wallet...<br><progress></progress>");
+            setTimeout(() => {
+                formMessageSet('load', 'warning', "Opening wallet, please be patient...<br><progress></progress>");
+                wsmanager.startWallet(walletFile, walletPass, onError, onSuccess);
+            }, 800);
         });
     });
 
@@ -1781,7 +1748,7 @@ function handleWalletCreate() {
                     fs.renameSync(finalPath, backfn);
                     //fs.unlinkSync(finalPath);
                 } catch (err) {
-                    formMessageSet('create', 'error', `Unable to overwrite existing file, please enter new wallet file path`);
+                    formMessageSet('create', 'error', `Unable to overwrite existing file, please enter new wallet file path.`);
                     return;
                 }
             }
@@ -1794,7 +1761,7 @@ function handleWalletCreate() {
                 settings.set('recentWallet', walletFile);
                 walletOpenInputPath.value = walletFile;
                 changeSection('section-overview-load');
-                wsutil.showToast('Wallet have been created, you can now open your wallet!', 12000);
+                wsutil.showToast('Wallet has been created, you can now open your wallet.', 12000);
             }).catch((err) => {
                 formMessageSet('create', 'error', err.message);
                 return;
@@ -1817,10 +1784,6 @@ function handleWalletImportKeys() {
 
         // validate path
         wsutil.validateWalletPath(filePathValue, DEFAULT_WALLET_PATH).then((finalPath) => {
-            if (!passwordValue.length) {
-                formMessageSet('import', 'error', `Please enter a password, creating wallet without a password will not be supported!`);
-                return;
-            }
 
             if (scanHeightValue < 0 || scanHeightValue.toPrecision().indexOf('.') !== -1) {
                 formMessageSet('import', 'error', 'Invalid scan height!');
@@ -1891,12 +1854,6 @@ function handleWalletImportSeed() {
         let scanHeightValue = importSeedInputScanHeight.value ? parseInt(importSeedInputScanHeight.value, 10) : 0;
         // validate path
         wsutil.validateWalletPath(filePathValue, DEFAULT_WALLET_PATH).then((finalPath: any) => {
-            // validate password
-            if (!passwordValue.length) {
-                formMessageSet('import-seed', 'error', `Please enter a password, creating wallet without a password will not be supported!`);
-                return;
-            }
-
             if (scanHeightValue < 0 || scanHeightValue.toPrecision().indexOf('.') !== -1) {
                 formMessageSet('import-seed', 'error', 'Invalid scan height!');
                 return;
