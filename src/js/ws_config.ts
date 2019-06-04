@@ -25,7 +25,7 @@ interface IConfig {
   addressLength: number,
   integratedAddressLength: number,
   minimumFee: number,
-  mininumSend: number,
+  minimumSend: number,
   defaultMixin: number,
   decimalPlaces: number,
   decimalDivisor: number,
@@ -100,7 +100,7 @@ export const config: IConfig = {
   // minimum fee for sending transaction
   minimumFee: 0.1,
   // minimum amount for sending transaction
-  mininumSend: 0.1,
+  minimumSend: 0.1,
   // default mixin/anonymity for transaction
   defaultMixin: 3,
   // to represent human readable value

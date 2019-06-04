@@ -6,6 +6,8 @@ import { config } from './ws_config';
 import { syncStatus } from './ws_constants';
 import * as log from 'electron-log';
 
+import { walletSession } from './wsui_main'
+
 const wsutil = new Utils();
 const brwin: any = remote.getCurrentWindow();
 const settings = new Store({ name: 'Settings' });

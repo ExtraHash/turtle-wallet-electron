@@ -1,6 +1,7 @@
 import * as log from 'electron-log';
 import { syncStatus } from './ws_constants';
 import { WalletShellApi } from './ws_api';
+import { walletSession } from './wsui_main';
 
 let DEBUG = false;
 log.transports.file.maxSize = 5 * 1024 * 1024;
@@ -45,6 +46,7 @@ let walletStatus: WalletStatus = {
     TX_CHECK_SKIPPED_COUNT: 0,
     TX_SKIPPED_COUNT: 0,
 };
+
 let wsapi = null;
 let taskWorker = null;
 

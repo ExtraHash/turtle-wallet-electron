@@ -14,6 +14,7 @@ import  { UpdateUiState } from './wsui_updater';
 import { Utils } from './ws_utils';
 import { syncStatus } from './ws_constants';
 import { WalletBackend, ConventionalDaemon, BlockchainCacheApi } from 'turtlecoin-wallet-backend';
+import { resolve } from 'dns';
 
 let daemon: ConventionalDaemon | BlockchainCacheApi = new BlockchainCacheApi('blockapi.turtlepay.io', true);
 let wallet: any;
@@ -210,15 +211,18 @@ export class WalletShellManager {
         try { fs.unlinkSync(wsession.get('walletConfig')); } catch (e) { }
     };
     
-    public startWallet(walletFile, password, onError, onSuccess) {
+    public startWallet(walletFile, password, onError, onSuccess, walletSession) {
+        log.debug('walletfile: ' + walletFile);
+        log.debug('password: ' + password);
         if (this.syncWorker) this.stopSyncWorker();
-        let daemon = new BlockchainCacheApi('blockapi.turtlepay.io', true);
         const [wallet, error] = WalletBackend.openWalletFromFile(daemon, walletFile, password);
         if (error) {
             log.debug(error);
             onError(`ERROR_WALLET_EXEC: ${error}`);
         } else {
+            walletSession.wallet = wallet;
             let walletAddress = wallet.getPrimaryAddress();
+            wallet.start();
             log.debug('Opened wallet ' + walletAddress)
             wsession.set('loadedWalletAddress', walletAddress);
             onSuccess();
@@ -233,6 +237,14 @@ export class WalletShellManager {
             configData += `${sep}${k.toString().replace('--', '')}`;
         });
         return configData.trim();
+    };
+
+    public stopWallet(fileName: string, password: string, wallet) {
+        return new Promise(function (resolve) {
+            log.debug('Saving and closing wallet...');
+            wallet.saveWalletToFile(fileName, password);
+            resolve(true);
+        });
     };
 
     public stopService() {
@@ -268,7 +280,7 @@ export class WalletShellManager {
             } else {
                 log.debug("Service is not running");
                 wsm._reinitSession();
-                resolve(false);
+                resolve(true);
             }
         });
     };
@@ -392,6 +404,7 @@ export class WalletShellManager {
     };
 
     public createWallet(walletFile, password) {
+        log.debug(walletFile, password);
         return new Promise((resolve, reject) => {
             const daemon: BlockchainCacheApi = new BlockchainCacheApi('blockapi.turtlepay.io', true);
             const wallet: WalletBackend = WalletBackend.createWallet(daemon);

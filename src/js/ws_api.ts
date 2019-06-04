@@ -2,6 +2,8 @@ import request from 'request-promise-native';
 import { config } from '../../src/js/ws_config';
 import * as log from 'electron-log';
 
+import { walletSession } from './wsui_main';
+
 export interface WalletShellSettings {
     service_host: string;
     service_port: string;
@@ -65,6 +67,7 @@ export class WalletShellApi {
             });
         });
     }
+
     // only get single addres only, no multi address support for this wallet, yet
     public getAddress() {
         return new Promise((resolve, reject) => {
@@ -75,6 +78,7 @@ export class WalletShellApi {
             });
         });
     }
+
     public getFeeInfo() {
         return new Promise((resolve, reject) => {
             this._sendRequest('getFeeInfo').then((result) => {
@@ -84,20 +88,16 @@ export class WalletShellApi {
             });
         });
     }
+
     public getBalance(params: any) {
         return new Promise((resolve, reject) => {
-            params = params || {};
-            params.address = params.address || '';
-            let req_params = {
-                address: params.address
-            };
-            this._sendRequest('getBalance', req_params).then((result) => {
-                return resolve(result);
-            }).catch((err) => {
-                return reject(err);
+                const [unlockedBalance, lockedBalance] = walletSession.wallet.getBalance();
+                log.debug('unlockedBalance: ', unlockedBalance);
+                log.debug('lockedBalance: ', lockedBalance)
+                return resolve(unlockedBalance);
             });
-        });
-    }
+    };
+
     public getStatus() {
         return new Promise((resolve, reject) => {
             this._sendRequest('getStatus').then((result) => {
@@ -107,6 +107,7 @@ export class WalletShellApi {
             });
         });
     }
+
     public save() {
         return new Promise((resolve, reject) => {
             this._sendRequest('save', {}, 6000).then(() => {
@@ -116,6 +117,7 @@ export class WalletShellApi {
             });
         });
     }
+
     public getViewKey() {
         return new Promise((resolve, reject) => {
             this._sendRequest('getViewKey').then((result) => {
@@ -125,6 +127,7 @@ export class WalletShellApi {
             });
         });
     }
+
     public getSpendKeys(params: any) {
         return new Promise((resolve, reject) => {
             params = params || {};
@@ -141,6 +144,7 @@ export class WalletShellApi {
             });
         });
     }
+
     public getMnemonicSeed(params: any) {
         return new Promise((resolve, reject) => {
             params = params || {};
@@ -157,6 +161,7 @@ export class WalletShellApi {
             });
         });
     }
+
     public getBackupKeys(params: any) {
         return new Promise((resolve, reject) => {
             params = params || {};
@@ -189,6 +194,7 @@ export class WalletShellApi {
             });
         });
     }
+
     public getTransactions(params: any) {
         return new Promise((resolve, reject) => {
             params = params || {};
@@ -205,6 +211,7 @@ export class WalletShellApi {
             });
         });
     }
+
     // send single transaction
     public sendTransaction(params: any) {
         return new Promise((resolve, reject) => {
@@ -231,6 +238,7 @@ export class WalletShellApi {
             });
         });
     }
+
     public reset(params: any) {
         return new Promise((resolve, reject) => {
             params = params || {};
@@ -246,6 +254,7 @@ export class WalletShellApi {
             });
         });
     }
+
     public estimateFusion(params: any) {
         return new Promise((resolve, reject) => {
             params = params || {};
@@ -257,6 +266,7 @@ export class WalletShellApi {
             });
         });
     }
+
     public sendFusionTransaction(params: any) {
         return new Promise((resolve, reject) => {
             params = params || {};
@@ -269,6 +279,7 @@ export class WalletShellApi {
             });
         });
     }
+    
     public createIntegratedAddress(params: any) {
         return new Promise((resolve, reject) => {
             params = params || {};

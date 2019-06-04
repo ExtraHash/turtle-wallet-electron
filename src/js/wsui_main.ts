@@ -18,6 +18,11 @@ import { WalletShellSession } from './ws_session';
 import { WalletShellManager } from './ws_manager';
 import { syncStatus } from './ws_constants';
 import { WalletShellAddressBook } from './ws_addressbook'
+import { WalletInfo } from './walletinfo';
+import { WalletBackend, ConventionalDaemon, BlockchainCacheApi } from 'turtlecoin-wallet-backend';
+
+export const walletSession = new WalletInfo();
+walletSession.daemon = new BlockchainCacheApi('blockapi.turtlepay.io', true);
 
 const wsutil = new Utils();
 const wsmanager = new WalletShellManager();
@@ -45,7 +50,6 @@ let ABGRID: any;
 let TXGRID: any;
 let FETCHNODESIG: any;
 let ELECTRON_ENABLE_SECURITY_WARNINGS: any;
-
 
 let WALLET_OPEN_IN_PROGRESS = false;
 
@@ -249,7 +253,7 @@ let jtfr = {
         config.assetTicker,
         config.walletServiceBinaryFilename,
         config.minimumFee,
-        config.mininumSend
+        config.minimumSend
     ]
 };
 
@@ -1561,10 +1565,10 @@ function handleWalletOpen() {
             }, 300);
         }
 
-        let walletFile = walletOpenInputPath.value;
-        let walletPass = walletOpenInputPassword.value;
+        walletSession.fileName = walletOpenInputPath.value;
+        walletSession.password = walletOpenInputPassword.value;
 
-        fs.access(walletFile, fs.constants.R_OK, (err) => {
+        fs.access(walletSession.fileName, fs.constants.R_OK, (err) => {
             if (err) {
                 formMessageSet('load', 'error', "Invalid wallet file path");
                 setOpenButtonsState(0);
@@ -1574,9 +1578,9 @@ function handleWalletOpen() {
 
             setOpenButtonsState(1);
             WALLET_OPEN_IN_PROGRESS = true;
-            settings.set('recentWallet', walletFile);
-            settings.set('recentWalletDir', path.dirname(walletFile));
-            wsmanager.startWallet(walletFile, walletPass, onError, onSuccess);
+            settings.set('recentWallet', walletSession.fileName);
+            settings.set('recentWalletDir', path.dirname(walletSession.fileName));
+            wsmanager.startWallet(walletSession.fileName, walletSession.password, onError, onSuccess, walletSession);
         });
     });
 
@@ -1692,7 +1696,7 @@ function handleWalletClose() {
         // save + SIGTERMed wallet daemon
         // reset tx
         resetTransactions();
-        wsmanager.stopService().then(() => {
+        wsmanager.stopWallet(walletSession.fileName, walletSession.password, walletSession.wallet).then(() => {
             setTimeout(function () {
                 // clear form err msg
                 formMessageReset();
@@ -2003,8 +2007,8 @@ function handleSendTransfer() {
 
         let total = 0;
         let amount = sendInputAmount.value ? parseFloat(sendInputAmount.value) : 0;
-        if (amount <= 0 || amount < config.mininumSend) {
-            formMessageSet('send', 'error', `Sorry, minimum amount you can send is ${config.mininumSend}`);
+        if (amount <= 0 || amount < config.minimumSend) {
+            formMessageSet('send', 'error', `Sorry, minimum amount you can send is ${config.minimumSend}`);
             return;
         }
 
@@ -2998,7 +3002,7 @@ ipcRenderer.on('cleanup', () => {
     dialog.innerHTML = htmlStr;
     dialog.showModal();
     wsmanager.stopSyncWorker();
-    wsmanager.stopService().then(() => {
+    wsmanager.stopWallet(walletSession.fileName, walletSession.password, walletSession.wallet).then(() => {
         setTimeout(function () {
             wsmanager.terminateService(true);
             try { fs.unlinkSync(wsession.get('walletConfig')); } catch (e) { }
