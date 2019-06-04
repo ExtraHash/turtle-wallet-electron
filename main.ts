@@ -336,40 +336,6 @@ function updatePublicNodes() {
     }
 }
 
-function serviceBinCheck() {
-    if (DEFAULT_SERVICE_BIN.startsWith('/tmp')) {
-        log.warn(`AppImage env, copying service bin file`);
-        let targetPath = path.join(app.getPath('userData'), SERVICE_FILENAME);
-        try {
-        fs.renameSync(targetPath, `${targetPath}.bak`);
-        } catch (_e) { }
-        try {
-            fs.copyFile(DEFAULT_SERVICE_BIN, targetPath, (err: NodeJS.ErrnoException) => {
-                if (err) {
-                    log.error(err);
-                    return;
-                }
-                settings.set('service_bin', targetPath);
-                log.debug(`service binary copied to ${targetPath}`);
-            });
-        } catch (_e) { }
-    } else {
-        // don't trust user's settings, recheck
-        let svcbin = settings.get('service_bin');
-        try {
-            if (!fs.existsSync(svcbin)) {
-                log.warn(`Service binary can't be found, falling back to default`);
-                settings.set('service_bin', DEFAULT_SERVICE_BIN);
-            } else {
-                log.info('Service binary found');
-            }
-        } catch (_e) {
-            log.warn('Failed to check for service binary path, falling back to default');
-            settings.set('service_bin', DEFAULT_SERVICE_BIN);
-        }
-    }
-}
-
 function initSettings() {
     Object.keys(DEFAULT_SETTINGS).forEach((k: string) => {
         if (!settings.has(k) || settings.get(k) === null) {
@@ -378,7 +344,6 @@ function initSettings() {
     });
     settings.set('service_password', crypto.randomBytes(32).toString('hex'));
     settings.set('version', WALLETSHELL_VERSION);
-    serviceBinCheck();
     fs.unlink(WALLET_CFGFILE, (err: NodeJS.ErrnoException) => {
         if (err) log.debug(err.code === 'ENOENT' ? 'No stalled wallet config' : err.message);
     });

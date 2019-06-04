@@ -219,7 +219,7 @@ export class WalletShellManager {
             onError(`ERROR_WALLET_EXEC: ${error}`);
         } else {
             let walletAddress = wallet.getPrimaryAddress();
-            log.debug('walletAddress = ' + walletAddress)
+            log.debug('Opened wallet ' + walletAddress)
             wsession.set('loadedWalletAddress', walletAddress);
             onSuccess();
         }
