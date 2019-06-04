@@ -1576,12 +1576,7 @@ function handleWalletOpen() {
             WALLET_OPEN_IN_PROGRESS = true;
             settings.set('recentWallet', walletFile);
             settings.set('recentWalletDir', path.dirname(walletFile));
-            formMessageSet('load', 'warning', "Accessing wallet...<br><progress></progress>");
-            formMessageSet('load', 'warning', "Starting wallet...<br><progress></progress>");
-            setTimeout(() => {
-                formMessageSet('load', 'warning', "Opening wallet, please be patient...<br><progress></progress>");
-                wsmanager.startWallet(walletFile, walletPass, onError, onSuccess);
-            }, 800);
+            wsmanager.startWallet(walletFile, walletPass, onError, onSuccess);
         });
     });
 
